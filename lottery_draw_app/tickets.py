@@ -104,7 +104,7 @@ def generate_ticket_range(start_ticket: str, end_ticket: str) -> list[str]:
 
 
 def parse_excluded_tickets(raw_text: str) -> list[str]:
-    """Parse excluded tickets from comma-separated text."""
+    """Parse and validate excluded tickets from comma-separated text."""
     if not raw_text.strip():
         return []
 
@@ -123,7 +123,7 @@ def parse_excluded_tickets(raw_text: str) -> list[str]:
         try:
             letter, number = parse_ticket(piece)
         except TicketValidationError as exc:
-            if "," not in raw_text and any(character.isspace() for character in raw_text.strip()):
+            if any(character.isspace() for character in piece):
                 raise TicketValidationError(invalid_format_message) from exc
             raise
         normalized_ticket = _format_ticket(letter, number)

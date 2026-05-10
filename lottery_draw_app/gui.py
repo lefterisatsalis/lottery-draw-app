@@ -228,7 +228,7 @@ class LotteryDrawApp(ctk.CTk):
         try:
             self.state("zoomed")
         except tk.TclError:
-            self.attributes("-zoomed", True)
+            pass
 
 
 def run_app() -> None:
