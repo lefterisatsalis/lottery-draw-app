@@ -6,7 +6,7 @@ A polished Python desktop application for raffle/lottery draws with Greek ticket
 
 - Import prizes from an Excel file (`.xlsx`, one prize per row in the first column)
 - Define an inclusive draw range using Greek uppercase ticket format (`Α01` to `Ω100`)
-- Exclude specific tickets from the draw (optional)
+- Exclude specific tickets from the draw (optional, comma-separated format like `Α05, Β12, Η03`)
 - Confirmation dialog before running the draw
 - Unique winners (no duplicate winning tickets)
 - Export results to Excel with exactly 2 columns:

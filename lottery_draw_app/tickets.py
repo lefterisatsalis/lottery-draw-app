@@ -57,15 +57,15 @@ def parse_ticket(ticket: str) -> tuple[str, int]:
     normalized = _normalize_ticket_text(ticket)
     match = TICKET_RE.match(normalized)
     if not match:
-        raise TicketValidationError(f"Invalid ticket format: {ticket}")
+        raise TicketValidationError(f"Μη έγκυρη μορφή λαχνού: {ticket}")
 
     letter, number_text = match.groups()
     if letter not in LETTER_TO_INDEX:
-        raise TicketValidationError(f"Invalid Greek uppercase letter in ticket: {ticket}")
+        raise TicketValidationError(f"Μη έγκυρο ελληνικό κεφαλαίο γράμμα στον λαχνό: {ticket}")
 
     number = int(number_text)
     if not 1 <= number <= 100:
-        raise TicketValidationError(f"Ticket number must be between 1 and 100: {ticket}")
+        raise TicketValidationError(f"Ο αριθμός λαχνού πρέπει να είναι από 1 έως 100: {ticket}")
 
     return letter, number
 
@@ -79,14 +79,14 @@ def ticket_to_serial(ticket: str) -> int:
 def serial_to_ticket(serial: int) -> str:
     """Convert serial number back to formatted ticket text."""
     if serial < 1:
-        raise TicketValidationError("Ticket serial must be positive")
+        raise TicketValidationError("Ο σειριακός αριθμός λαχνού πρέπει να είναι θετικός")
 
     serial_zero_based = serial - 1
     letter_index = serial_zero_based // 100
     number = (serial_zero_based % 100) + 1
 
     if letter_index >= len(GREEK_CAPITALS):
-        raise TicketValidationError("Ticket serial exceeds supported Greek alphabet range")
+        raise TicketValidationError("Ο σειριακός αριθμός λαχνού υπερβαίνει το υποστηριζόμενο ελληνικό αλφάβητο")
 
     letter = GREEK_CAPITALS[letter_index]
     return _format_ticket(letter, number)
@@ -98,22 +98,34 @@ def generate_ticket_range(start_ticket: str, end_ticket: str) -> list[str]:
     end_serial = ticket_to_serial(end_ticket)
 
     if start_serial > end_serial:
-        raise TicketValidationError("Start ticket must be less than or equal to end ticket")
+        raise TicketValidationError("Ο αρχικός λαχνός πρέπει να είναι μικρότερος ή ίσος του τελικού λαχνού")
 
     return [serial_to_ticket(serial) for serial in range(start_serial, end_serial + 1)]
 
 
 def parse_excluded_tickets(raw_text: str) -> list[str]:
-    """Parse excluded tickets from comma/newline/space separated text."""
+    """Parse and validate excluded tickets from comma-separated text."""
     if not raw_text.strip():
         return []
 
-    pieces = [part.strip() for part in re.split(r"[\n,;\s]+", raw_text) if part.strip()]
+    invalid_format_message = "Οι εξαιρούμενοι λαχνοί πρέπει να χωρίζονται μόνο με κόμμα (π.χ. Α05, Β12, Η03)."
+    if any(separator in raw_text for separator in ("\n", ";", "\t")):
+        raise TicketValidationError(invalid_format_message)
+
+    pieces = [part.strip() for part in raw_text.split(",")]
+    if any(not part for part in pieces):
+        raise TicketValidationError(invalid_format_message)
+
     deduplicated: list[str] = []
     seen = set()
 
     for piece in pieces:
-        letter, number = parse_ticket(piece)
+        try:
+            letter, number = parse_ticket(piece)
+        except TicketValidationError as exc:
+            if any(character.isspace() for character in piece):
+                raise TicketValidationError(invalid_format_message) from exc
+            raise
         normalized_ticket = _format_ticket(letter, number)
         if normalized_ticket not in seen:
             seen.add(normalized_ticket)

@@ -15,21 +15,21 @@ def load_prizes_from_excel(file_path: str | Path) -> list[str]:
     """Load one prize per row from the first column of an Excel file."""
     path = Path(file_path)
     if not path.exists():
-        raise ExcelDataError(f"Prize file does not exist: {file_path}")
+        raise ExcelDataError(f"Το αρχείο δώρων δεν υπάρχει: {file_path}")
 
     try:
         dataframe = pd.read_excel(path, header=None, engine="openpyxl")
     except Exception as exc:
-        raise ExcelDataError(f"Failed to read Excel prize file: {exc}") from exc
+        raise ExcelDataError(f"Αποτυχία ανάγνωσης αρχείου Excel δώρων: {exc}") from exc
 
     if dataframe.empty:
-        raise ExcelDataError("Excel file is empty")
+        raise ExcelDataError("Το αρχείο Excel είναι κενό")
 
     first_column = dataframe.iloc[:, 0]
     prizes = [str(value).strip() for value in first_column if pd.notna(value) and str(value).strip()]
 
     if not prizes:
-        raise ExcelDataError("No valid prizes found in first column")
+        raise ExcelDataError("Δεν βρέθηκαν έγκυρα δώρα στην πρώτη στήλη")
 
     return prizes
 
@@ -37,7 +37,7 @@ def load_prizes_from_excel(file_path: str | Path) -> list[str]:
 def save_results_to_excel(results: list[dict[str, str]], file_path: str | Path) -> None:
     """Save draw results in exactly two columns: Prize, Drawn Ticket."""
     if not results:
-        raise ExcelDataError("No draw results available to export")
+        raise ExcelDataError("Δεν υπάρχουν αποτελέσματα κλήρωσης για εξαγωγή")
 
     normalized_results = [
         {
@@ -53,4 +53,4 @@ def save_results_to_excel(results: list[dict[str, str]], file_path: str | Path) 
     try:
         dataframe.to_excel(output_path, index=False, engine="openpyxl")
     except Exception as exc:
-        raise ExcelDataError(f"Failed to save results to Excel: {exc}") from exc
+        raise ExcelDataError(f"Αποτυχία αποθήκευσης αποτελεσμάτων σε Excel: {exc}") from exc

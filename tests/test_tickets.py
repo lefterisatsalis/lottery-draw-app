@@ -22,8 +22,14 @@ class TicketTests(unittest.TestCase):
             parse_ticket("Α101")
 
     def test_parse_excluded_deduplicates(self):
-        excluded = parse_excluded_tickets("Α01, Α1\nΑ02")
+        excluded = parse_excluded_tickets("Α01, Α1, Α02")
         self.assertEqual(excluded, ["Α01", "Α02"])
+
+    def test_parse_excluded_rejects_non_comma_separator(self):
+        with self.assertRaises(TicketValidationError) as error:
+            parse_excluded_tickets("Α01 Β02")
+
+        self.assertIn("μόνο με κόμμα", str(error.exception))
 
 
 if __name__ == "__main__":
