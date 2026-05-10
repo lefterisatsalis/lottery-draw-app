@@ -72,7 +72,7 @@ class LotteryDrawApp(ctk.CTk):
         self.end_entry = ctk.CTkEntry(left_panel, placeholder_text="π.χ. Η23", textvariable=self.end_ticket_var)
         self.end_entry.grid(row=6, column=0, pady=(4, 8), sticky="ew")
 
-        ctk.CTkLabel(left_panel, text="Εξαιρούμενοι λαχνοί (μόνο με κόμμα)", font=ctk.CTkFont(weight="bold")).grid(
+        ctk.CTkLabel(left_panel, text="Εξαιρούμενοι λαχνοί (διαχωρισμένοι με κόμμα)", font=ctk.CTkFont(weight="bold")).grid(
             row=7, column=0, sticky="w"
         )
         self.excluded_tickets_var = tk.StringVar(value="")
@@ -93,8 +93,8 @@ class LotteryDrawApp(ctk.CTk):
         stats_frame.grid(row=10, column=0, sticky="ew")
         stats_frame.grid_columnconfigure((0, 1), weight=1)
 
-        self.prize_count_var = tk.StringVar(value="Δώρα: 0")
-        self.ticket_count_var = tk.StringVar(value="Διαθέσιμοι λαχνοί: 0")
+        self.prize_count_var = tk.StringVar(value="Διαθέσιμα δώρα: 0")
+        self.ticket_count_var = tk.StringVar(value="Λαχνοί: 0")
         ctk.CTkLabel(
             stats_frame,
             textvariable=self.prize_count_var,
@@ -143,9 +143,9 @@ class LotteryDrawApp(ctk.CTk):
             row=2, column=0, padx=12, pady=(4, 4), sticky="w"
         )
 
-        self.results_table = ctk.CTkTextbox(right_panel, font=ctk.CTkFont(size=14))
+        self.results_table = ctk.CTkTextbox(right_panel, font=ctk.CTkFont(size=18))
         self.results_table.grid(row=3, column=0, padx=12, pady=(0, 12), sticky="nsew")
-        self.results_table.configure(state="disabled")
+        self.results_table.configure(state="disabled", spacing3=10)
 
         self.status_var = tk.StringVar(value="Κατάσταση: Έτοιμο")
         ctk.CTkLabel(container, textvariable=self.status_var, anchor="w").grid(
@@ -177,7 +177,7 @@ class LotteryDrawApp(ctk.CTk):
             return
 
         self.prize_file_var.set(file_path)
-        self.prize_count_var.set(f"Δώρα: {len(self.prizes)}")
+        self.prize_count_var.set(f"Διαθέσιμα δώρα: {len(self.prizes)}")
         self.status_var.set(f"Κατάσταση: Εισήχθησαν {len(self.prizes)} δώρα")
 
     def _build_available_tickets(self) -> list[str]:
@@ -189,7 +189,7 @@ class LotteryDrawApp(ctk.CTk):
         excluded = parse_excluded_tickets(excluded_raw) if excluded_raw else []
 
         available = filter_excluded_in_range(tickets, excluded)
-        self.ticket_count_var.set(f"Διαθέσιμοι λαχνοί: {len(available)}")
+        self.ticket_count_var.set(f"Λαχνοί: {len(available)}")
         return available
 
     def _refresh_available_ticket_count(self, *_args: object) -> None:
@@ -197,7 +197,7 @@ class LotteryDrawApp(ctk.CTk):
         end_ticket = self.end_ticket_var.get().strip()
 
         if not start_ticket or not end_ticket:
-            self.ticket_count_var.set("Διαθέσιμοι λαχνοί: -")
+            self.ticket_count_var.set("Λαχνοί: -")
             return
 
         try:
@@ -206,10 +206,10 @@ class LotteryDrawApp(ctk.CTk):
             excluded = parse_excluded_tickets(excluded_raw) if excluded_raw else []
             available = filter_excluded_in_range(tickets, excluded)
         except TicketValidationError:
-            self.ticket_count_var.set("Διαθέσιμοι λαχνοί: -")
+            self.ticket_count_var.set("Λαχνοί: -")
             return
 
-        self.ticket_count_var.set(f"Διαθέσιμοι λαχνοί: {len(available)}")
+        self.ticket_count_var.set(f"Λαχνοί: {len(available)}")
 
     def _confirm_and_draw(self) -> None:
         if not self.prizes:
