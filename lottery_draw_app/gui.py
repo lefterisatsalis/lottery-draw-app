@@ -58,7 +58,13 @@ class LotteryDrawApp(ctk.CTk):
             row=1, column=0, pady=(4, 8), sticky="w"
         )
 
-        ctk.CTkButton(left_panel, text="Εισαγωγή δώρων από Excel", command=self._import_prizes).grid(
+        action_button_font = ctk.CTkFont(size=16, weight="bold")
+        action_button_style = {
+            "font": action_button_font,
+            "height": 42,
+        }
+
+        ctk.CTkButton(left_panel, text="Εισαγωγή δώρων από Excel", command=self._import_prizes, **action_button_style).grid(
             row=2, column=0, pady=(0, 12), sticky="ew"
         )
 
@@ -117,15 +123,14 @@ class LotteryDrawApp(ctk.CTk):
 
         actions = ctk.CTkFrame(right_panel, fg_color="transparent")
         actions.grid(row=1, column=0, padx=12, pady=(0, 8), sticky="ew")
-        actions.grid_columnconfigure((0, 1), weight=1)
+        actions.grid_columnconfigure(0, weight=1, uniform="action_buttons")
+        actions.grid_columnconfigure(1, weight=1, uniform="action_buttons")
 
-        action_button_font = ctk.CTkFont(size=16, weight="bold")
         ctk.CTkButton(
             actions,
             text="Κλήρωση",
             command=self._confirm_and_draw,
-            font=action_button_font,
-            height=42,
+            **action_button_style,
         ).grid(
             row=0, column=0, padx=(0, 6), sticky="ew"
         )
@@ -133,8 +138,7 @@ class LotteryDrawApp(ctk.CTk):
             actions,
             text="Εξαγωγή αποτελεσμάτων σε Excel",
             command=self._export_results,
-            font=action_button_font,
-            height=42,
+            **action_button_style,
         ).grid(
             row=0, column=1, padx=(6, 0), sticky="ew"
         )
