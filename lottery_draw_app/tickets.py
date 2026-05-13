@@ -50,6 +50,10 @@ class TicketValidationError(ValueError):
     """Raised when a ticket is not valid."""
 
 
+class TicketRangeOrderError(TicketValidationError):
+    """Raised when a ticket range start comes after its end."""
+
+
 def _normalize_ticket_text(value: str) -> str:
     normalized = unicodedata.normalize("NFC", value.strip().upper())
     return normalized.translate(ACCENTED_UPPER_MAP)
@@ -107,7 +111,7 @@ def generate_ticket_range(start_ticket: str, end_ticket: str) -> list[str]:
     end_serial = ticket_to_serial(end_ticket)
 
     if start_serial > end_serial:
-        raise TicketValidationError(INVALID_TICKET_RANGE_ORDER_MESSAGE)
+        raise TicketRangeOrderError(INVALID_TICKET_RANGE_ORDER_MESSAGE)
 
     return [serial_to_ticket(serial) for serial in range(start_serial, end_serial + 1)]
 
@@ -139,9 +143,9 @@ def parse_excluded_tickets(raw_text: str) -> list[str]:
 
             try:
                 expanded_tickets = generate_ticket_range(start_text, end_text)
+            except TicketRangeOrderError as exc:
+                raise TicketValidationError(INVALID_EXCLUDED_RANGE_ORDER_MESSAGE) from exc
             except TicketValidationError as exc:
-                if str(exc) == INVALID_TICKET_RANGE_ORDER_MESSAGE:
-                    raise TicketValidationError(INVALID_EXCLUDED_RANGE_ORDER_MESSAGE) from exc
                 raise TicketValidationError(INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE) from exc
         else:
             try:
