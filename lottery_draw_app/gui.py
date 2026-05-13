@@ -78,13 +78,13 @@ class LotteryDrawApp(ctk.CTk):
         self.excluded_tickets_var = tk.StringVar(value="")
         self.excluded_entry = ctk.CTkEntry(
             left_panel,
-            placeholder_text="π.χ. Α05, Β12, Η03",
+            placeholder_text="π.χ. Α10, Β15, Δ12-Δ25",
             textvariable=self.excluded_tickets_var,
         )
         self.excluded_entry.grid(row=8, column=0, pady=(4, 4), sticky="ew")
         ctk.CTkLabel(
             left_panel,
-            text="π.χ. Α05, Β12, Η03",
+            text="π.χ. Α10, Β15, Δ12-Δ25",
             text_color=("gray40", "gray70"),
             font=ctk.CTkFont(size=12),
         ).grid(row=9, column=0, pady=(0, 10), sticky="w")

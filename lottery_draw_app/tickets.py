@@ -35,10 +35,23 @@ GREEK_CAPITALS = (
 LETTER_TO_INDEX = {letter: idx for idx, letter in enumerate(GREEK_CAPITALS)}
 TICKET_RE = re.compile(r"^([Α-Ω])\s*(\d{1,3})$")
 ACCENTED_UPPER_MAP = str.maketrans({"Ά": "Α", "Έ": "Ε", "Ή": "Η", "Ί": "Ι", "Ό": "Ο", "Ύ": "Υ", "Ώ": "Ω", "Ϊ": "Ι", "Ϋ": "Υ"})
+INVALID_TICKET_RANGE_ORDER_MESSAGE = "Ο αρχικός λαχνός πρέπει να είναι μικρότερος ή ίσος του τελικού λαχνού"
+INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE = (
+    "Οι εξαιρούμενοι λαχνοί πρέπει να είναι διαχωρισμένοι με κόμμα και κάθε τιμή να είναι "
+    "είτε ένας λαχνός είτε ένα διάστημα λαχνών (π.χ. Α10, Β15, Δ12-Δ25)."
+)
+INVALID_EXCLUDED_RANGE_ORDER_MESSAGE = (
+    "Στους εξαιρούμενους λαχνούς, η αρχή του διαστήματος πρέπει να είναι μικρότερη ή ίση του τέλους "
+    "(π.χ. Δ12-Δ25)."
+)
 
 
 class TicketValidationError(ValueError):
     """Raised when a ticket is not valid."""
+
+
+class TicketRangeOrderError(TicketValidationError):
+    """Raised when a ticket range start comes after its end."""
 
 
 def _normalize_ticket_text(value: str) -> str:
@@ -98,7 +111,7 @@ def generate_ticket_range(start_ticket: str, end_ticket: str) -> list[str]:
     end_serial = ticket_to_serial(end_ticket)
 
     if start_serial > end_serial:
-        raise TicketValidationError("Ο αρχικός λαχνός πρέπει να είναι μικρότερος ή ίσος του τελικού λαχνού")
+        raise TicketRangeOrderError(INVALID_TICKET_RANGE_ORDER_MESSAGE)
 
     return [serial_to_ticket(serial) for serial in range(start_serial, end_serial + 1)]
 
@@ -108,28 +121,43 @@ def parse_excluded_tickets(raw_text: str) -> list[str]:
     if not raw_text.strip():
         return []
 
-    invalid_format_message = "Οι εξαιρούμενοι λαχνοί πρέπει να χωρίζονται μόνο με κόμμα (π.χ. Α05, Β12, Η03)."
     if any(separator in raw_text for separator in ("\n", ";", "\t")):
-        raise TicketValidationError(invalid_format_message)
+        raise TicketValidationError(INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE)
 
     pieces = [part.strip() for part in raw_text.split(",")]
     if any(not part for part in pieces):
-        raise TicketValidationError(invalid_format_message)
+        raise TicketValidationError(INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE)
 
     deduplicated: list[str] = []
     seen = set()
 
     for piece in pieces:
-        try:
-            letter, number = parse_ticket(piece)
-        except TicketValidationError as exc:
-            if any(character.isspace() for character in piece):
-                raise TicketValidationError(invalid_format_message) from exc
-            raise
-        normalized_ticket = _format_ticket(letter, number)
-        if normalized_ticket not in seen:
-            seen.add(normalized_ticket)
-            deduplicated.append(normalized_ticket)
+        expanded_tickets: list[str] = []
+        if "-" in piece:
+            if piece.count("-") != 1:
+                raise TicketValidationError(INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE)
+
+            start_text, end_text = (part.strip() for part in piece.split("-", 1))
+            if not start_text or not end_text:
+                raise TicketValidationError(INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE)
+
+            try:
+                expanded_tickets = generate_ticket_range(start_text, end_text)
+            except TicketRangeOrderError as exc:
+                raise TicketValidationError(INVALID_EXCLUDED_RANGE_ORDER_MESSAGE) from exc
+            except TicketValidationError as exc:
+                raise TicketValidationError(INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE) from exc
+        else:
+            try:
+                letter, number = parse_ticket(piece)
+            except TicketValidationError as exc:
+                raise TicketValidationError(INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE) from exc
+            expanded_tickets = [_format_ticket(letter, number)]
+
+        for normalized_ticket in expanded_tickets:
+            if normalized_ticket not in seen:
+                seen.add(normalized_ticket)
+                deduplicated.append(normalized_ticket)
 
     return deduplicated
 
