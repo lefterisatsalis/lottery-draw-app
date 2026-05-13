@@ -1,6 +1,8 @@
 import unittest
 
 from lottery_draw_app.tickets import (
+    INVALID_EXCLUDED_RANGE_ORDER_MESSAGE,
+    INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE,
     TicketValidationError,
     filter_excluded_in_range,
     generate_ticket_range,
@@ -38,13 +40,13 @@ class TicketTests(unittest.TestCase):
         with self.assertRaises(TicketValidationError) as error:
             parse_excluded_tickets("Δ25-Δ12")
 
-        self.assertIn("αρχή του διαστήματος", str(error.exception))
+        self.assertEqual(str(error.exception), INVALID_EXCLUDED_RANGE_ORDER_MESSAGE)
 
     def test_parse_excluded_rejects_non_comma_separator(self):
         with self.assertRaises(TicketValidationError) as error:
             parse_excluded_tickets("Α01 Β02")
 
-        self.assertIn("διαχωρισμένοι με κόμμα", str(error.exception))
+        self.assertEqual(str(error.exception), INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE)
 
     def test_filter_excluded_in_range_ignores_exclusions_outside_selected_range(self):
         tickets = generate_ticket_range("Α10", "Α15")
