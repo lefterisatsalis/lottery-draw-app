@@ -12,6 +12,18 @@ from lottery_draw_app.tickets import (
 
 
 class TicketTests(unittest.TestCase):
+    def test_excluded_error_messages_match_expected_greek_text(self):
+        self.assertEqual(
+            INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE,
+            "Οι εξαιρούμενοι λαχνοί πρέπει να είναι διαχωρισμένοι με κόμμα και κάθε τιμή να είναι "
+            "είτε ένας λαχνός είτε ένα διάστημα λαχνών (π.χ. Α10, Β15, Δ12-Δ25).",
+        )
+        self.assertEqual(
+            INVALID_EXCLUDED_RANGE_ORDER_MESSAGE,
+            "Στους εξαιρούμενους λαχνούς, η αρχή του διαστήματος πρέπει να είναι μικρότερη ή ίση του τέλους "
+            "(π.χ. Δ12-Δ25).",
+        )
+
     def test_parse_ticket_accepts_greek(self):
         letter, number = parse_ticket("Β07")
         self.assertEqual((letter, number), ("Β", 7))

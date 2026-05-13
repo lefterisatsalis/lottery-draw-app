@@ -128,7 +128,7 @@ def parse_excluded_tickets(raw_text: str) -> list[str]:
     seen = set()
 
     for piece in pieces:
-        expanded_tickets: list[str]
+        expanded_tickets: list[str] = []
         if "-" in piece:
             if piece.count("-") != 1:
                 raise TicketValidationError(INVALID_EXCLUDED_TICKETS_FORMAT_MESSAGE)
